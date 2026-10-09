@@ -1,17 +1,12 @@
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useState } from "react";
-import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
 import API from "../utils/api";
 
 function PaymentForm({ total, cart, form, coupon }) {
   const stripe = useStripe();
   const elements = useElements();
 
-  const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,9 +15,6 @@ function PaymentForm({ total, cart, form, coupon }) {
 
     try {
       setLoading(true);
-
-      // Fake payment delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const token = localStorage.getItem("token");
 
@@ -67,7 +59,7 @@ function PaymentForm({ total, cart, form, coupon }) {
 
       window.location.href = stripeRes.data.checkout_url;
     } catch (err) {
-      console.log(err.response?.data || err);
+      console.error("Payment failed:", err.response?.data || err);
       alert("Payment failed");
     } finally {
       setLoading(false);
@@ -78,39 +70,31 @@ function PaymentForm({ total, cart, form, coupon }) {
     <div className="mt-4">
       <form onSubmit={handleSubmit}>
         <button
-          disabled={!stripe || loading}
+          type="submit"
+          disabled={!stripe || !elements || loading}
           className="
-          w-full
-          py-3
-
-          rounded-xl
-
-          bg-linear-to-r
-          from-cyan-500
-          to-purple-500
-
-          text-white
-          font-semibold
-
-          hover:scale-105
-          hover:shadow-lg
-          hover:shadow-purple-500/40
-
-          transition-all
-          duration-300
-
-          disabled:opacity-50
-          disabled:cursor-not-allowed
-        "
+            w-full
+            py-3
+            rounded-xl
+            bg-linear-to-r
+            from-cyan-500
+            to-purple-500
+            text-white
+            font-semibold
+            hover:scale-105
+            hover:shadow-lg
+            hover:shadow-purple-500/40
+            transition-all
+            duration-300
+            disabled:opacity-50
+            disabled:cursor-not-allowed
+          "
         >
           {loading ? "Processing..." : `Pay $${total}`}
         </button>
-
-        {success && (
-          <p className="text-green-400 mt-3 text-center">Payment Successful</p>
-        )}
       </form>
     </div>
   );
 }
+
 export default PaymentForm;

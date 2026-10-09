@@ -1,25 +1,33 @@
+
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../utils/api";
-// import { CheckCircle } from "lucide-react";
 
 function Success() {
   const { id } = useParams();
-
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    fetchOrder();
-  }, []);
+    let isMounted = true;
 
-  const fetchOrder = async () => {
-    try {
-      const res = await API.get(`/orders/${id}`);
-      setOrder(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    const fetchOrder = async () => {
+      try {
+        const res = await API.get(`/orders/${id}`);
+
+        if (isMounted) {
+          setOrder(res.data);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchOrder();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   if (!order) {
     return (
@@ -44,9 +52,7 @@ function Success() {
         "
       >
         {/* Success Icon */}
-        <div className="text-7xl">
-  ✅
-</div>
+        <div className="text-7xl">✅</div>
 
         <h1 className="text-4xl font-bold text-white mt-4">
           Order Placed Successfully 🎉
@@ -65,14 +71,7 @@ function Success() {
         </p>
 
         {/* Order Info */}
-        <div
-          className="
-            mt-8
-            grid
-            md:grid-cols-2
-            gap-4
-          "
-        >
+        <div className="mt-8 grid md:grid-cols-2 gap-4">
           <div
             className="
               bg-white/5
@@ -82,7 +81,6 @@ function Success() {
             "
           >
             <p className="text-gray-400 text-sm">Order ID</p>
-
             <p className="text-white font-semibold break-all">
               {id}
             </p>
@@ -97,7 +95,6 @@ function Success() {
             "
           >
             <p className="text-gray-400 text-sm">Total Amount</p>
-
             <p className="text-cyan-400 text-2xl font-bold">
               ${order.total_amount}
             </p>
@@ -113,7 +110,7 @@ function Success() {
           <div className="grid md:grid-cols-2 gap-5">
             {order.items.map((item, index) => (
               <div
-                key={index}
+                key={item.id ?? `${item.name}-${index}`}
                 className="
                   flex
                   items-center
@@ -129,13 +126,8 @@ function Success() {
               >
                 <img
                   src={item.image}
-                  alt={item.name}
-                  className="
-                    w-24
-                    h-24
-                    rounded-xl
-                    object-cover
-                  "
+                  alt={item.name || "Ordered product"}
+                  className="w-24 h-24 rounded-xl object-cover"
                 />
 
                 <div className="text-left flex-1">
@@ -157,31 +149,27 @@ function Success() {
         </div>
 
         {/* Button */}
-        <Link to="/">
-          <button
-            className="
-              mt-10
-              px-10
-              py-3
-              rounded-xl
-
-              bg-linear-to-r
-              from-cyan-500
-              to-purple-500
-
-              text-white
-              font-semibold
-
-              hover:scale-105
-              hover:shadow-lg
-              hover:shadow-purple-500/40
-
-              transition-all
-              duration-300
-            "
-          >
-            Continue Shopping
-          </button>
+        <Link
+          to="/"
+          className="
+            inline-block
+            mt-10
+            px-10
+            py-3
+            rounded-xl
+            bg-linear-to-r
+            from-cyan-500
+            to-purple-500
+            text-white
+            font-semibold
+            hover:scale-105
+            hover:shadow-lg
+            hover:shadow-purple-500/40
+            transition-all
+            duration-300
+          "
+        >
+          Continue Shopping
         </Link>
       </div>
     </div>

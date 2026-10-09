@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../context/useCart";
 import { jwtDecode } from "jwt-decode";
 
 function Navbar({ search, setSearch }) {

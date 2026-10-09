@@ -1,9 +1,10 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect } from "react";
 import API from "../utils/api";
+
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  // ✅ LOAD from localStorage (initial)
+  // LOAD from localStorage
   const [cart, setCart] = useState(() => {
     const userId = localStorage.getItem("userId");
 
@@ -14,30 +15,31 @@ export function CartProvider({ children }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // SAVE to Mongo DB (every change)
+  // FETCH CART FROM BACKEND
   useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) return;
+
+        const res = await API.get("/cart", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setCart(res.data);
+      } catch (err) {
+        console.error("Failed to fetch cart:", err.response?.data || err);
+      }
+    };
+
     fetchCart();
   }, []);
 
-  const fetchCart = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/cart", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setCart(res.data);
-    } catch (err) {
-      console.log(err.response?.data);
-    }
-  };
-
   // ADD TO CART
   const addToCart = (product) => {
-    console.log("ADDING:", product);
     setCart((prev) => {
       const exist = prev.find((item) => item._id === product._id);
 
@@ -50,11 +52,13 @@ export function CartProvider({ children }) {
       return [...prev, { ...product, qty: 1 }];
     });
   };
+
   // REMOVE ITEM
   const removeFromCart = (id) => {
     setCart((prev) => prev.filter((item) => item._id !== id));
   };
-  // INCREASE QTY
+
+  // INCREASE QUANTITY
   const increaseQty = (id) => {
     setCart((prev) =>
       prev.map((item) =>
@@ -63,7 +67,7 @@ export function CartProvider({ children }) {
     );
   };
 
-  // DECREASE QTY
+  // DECREASE QUANTITY
   const decreaseQty = (id) => {
     setCart((prev) =>
       prev
@@ -74,7 +78,7 @@ export function CartProvider({ children }) {
     );
   };
 
-  //Clear Cart
+  // CLEAR CART
   const clearCart = () => {
     setCart([]);
   };
@@ -95,4 +99,4 @@ export function CartProvider({ children }) {
   );
 }
 
-export const useCart = () => useContext(CartContext);
+export default CartContext;

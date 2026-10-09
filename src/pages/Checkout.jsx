@@ -1,4 +1,3 @@
-import { useCart } from "../context/CartContext";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Elements } from "@stripe/react-stripe-js";
@@ -10,25 +9,40 @@ function Checkout() {
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch Cart
-
-  const fetchCart = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/cart", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setCart(res.data);
-    } catch (err) {
-      console.log(err.response?.data);
-    }
-  };
+  // ================= FETCH CART =================
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchCart = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          if (!cancelled) setCart([]);
+          return;
+        }
+
+        const res = await API.get("/cart", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!cancelled) {
+          setCart(res.data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to fetch cart:", err.response?.data || err);
+        }
+      }
+    };
+
     fetchCart();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ================= FORM =================
@@ -52,7 +66,7 @@ function Checkout() {
 
   // ================= TOTAL =================
   const subtotal = cart.reduce(
-    (sum, item) => sum + item.quantity * item.price,
+    (sum, item) => sum + item.quantity * Number(item.price),
     0,
   );
 
@@ -80,15 +94,13 @@ function Checkout() {
       setDiscount(res.data.discount_amount);
       setCouponMsg("Coupon Applied ✅");
     } catch (err) {
-      console.log(err.response?.data);
-
+      console.error("Failed to apply coupon:", err.response?.data || err);
       setCouponMsg(err.response?.data?.detail || "Invalid Coupon");
     }
   };
 
   // ================= COD ORDER =================
   const handleCOD = async () => {
-    // VALIDATION
     if (
       !form.name ||
       !form.email ||
@@ -102,6 +114,11 @@ function Checkout() {
       return;
     }
 
+    if (cart.length === 0) {
+      alert("Your cart is empty");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
 
@@ -110,12 +127,10 @@ function Checkout() {
         return;
       }
 
-      // ================= ORDER DATA =================
       const orderData = {
         name: form.name,
         email: form.email,
         phone: form.phone,
-
         address: {
           full_name: form.name,
           phone: form.phone,
@@ -124,44 +139,31 @@ function Checkout() {
           postal_code: form.postal_code,
           country: form.country,
         },
-
         items: cart.map((item) => ({
           product_id: item.product_id,
           quantity: item.quantity,
         })),
-
         coupon_code: coupon || null,
         payment_method: "cod",
       };
 
-      console.log("ORDER DATA:", orderData);
-      console.log("CHECKOUT CART:", cart);
-
-      // ================= API REQUEST =================
       const res = await API.post("/orders/place", orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log("ORDER RESPONSE:", res.data);
-
-      // ================= CLEAR CART =================
       await API.delete("/cart/clear", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // ================= SUCCESS PAGE =================
       navigate(`/success/${res.data.order_id}`);
     } catch (err) {
-      console.log(err.response?.data || err);
-
+      console.error("Failed to place order:", err.response?.data || err);
       alert(err.response?.data?.detail || "Order failed");
     }
-
-    // navigate(`/success/${res.data.order_id}`);
   };
 
   return (
@@ -169,22 +171,15 @@ function Checkout() {
       {/* ================= LEFT SIDE ================= */}
       <div
         className="
-bg-white/10
-backdrop-blur-xl
-border border-white/10
-rounded-3xl
-shadow-2xl
-p-6
-"
+          bg-white/10
+          backdrop-blur-xl
+          border border-white/10
+          rounded-3xl
+          shadow-2xl
+          p-6
+        "
       >
-        <h2
-          className="
-  text-2xl
-  font-bold
-  text-white
-  mb-6
-"
-        >
+        <h2 className="text-2xl font-bold text-white mb-6">
           Shipping Details
         </h2>
 
@@ -194,25 +189,7 @@ p-6
           placeholder="Full Name"
           value={form.name}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         <input
@@ -221,25 +198,7 @@ transition-all
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         <input
@@ -248,25 +207,7 @@ transition-all
           placeholder="Phone Number"
           value={form.phone}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         <input
@@ -275,25 +216,7 @@ transition-all
           placeholder="City"
           value={form.city}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         <input
@@ -302,25 +225,7 @@ transition-all
           placeholder="Street"
           value={form.street}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         <input
@@ -329,25 +234,7 @@ transition-all
           placeholder="Postal Code"
           value={form.postal_code}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         <input
@@ -356,25 +243,7 @@ transition-all
           placeholder="Country"
           value={form.country}
           onChange={handleChange}
-          className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+          className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
         />
 
         {/* ================= PAYMENT METHOD ================= */}
@@ -383,58 +252,38 @@ transition-all
 
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={() => setMethod("cod")}
-              className={`px-5 py-3 rounded-xl font-medium transition-all
-
-${
-  method === "cod"
-    ? "bg-linear-to-r from-cyan-500 to-purple-500 text-white shadow-lg"
-    : "bg-white/10 text-gray-300 border border-white/10"
-}`}
+              className={`px-5 py-3 rounded-xl font-medium transition-all ${
+                method === "cod"
+                  ? "bg-linear-to-r from-cyan-500 to-purple-500 text-white shadow-lg"
+                  : "bg-white/10 text-gray-300 border border-white/10"
+              }`}
             >
               Cash on Delivery
             </button>
 
             <button
+              type="button"
               onClick={() => setMethod("card")}
-              className={`px-5 py-3 rounded-xl font-medium transition-all
-
-${
-  method === "card"
-    ? "bg-linear-to-r from-cyan-500 to-purple-500 text-white shadow-lg"
-    : "bg-white/10 text-gray-300 border border-white/10"
-}`}
+              className={`px-5 py-3 rounded-xl font-medium transition-all ${
+                method === "card"
+                  ? "bg-linear-to-r from-cyan-500 to-purple-500 text-white shadow-lg"
+                  : "bg-white/10 text-gray-300 border border-white/10"
+              }`}
             >
               Card Payment
             </button>
           </div>
         </div>
 
-        {/* ================= COD BUTTON ================= */}
+        {/* ================= PAYMENT BUTTON ================= */}
         <div className="mt-6 min-h-20">
           {method === "cod" ? (
             <button
+              type="button"
               onClick={handleCOD}
-              className="
-        w-full
-        py-3
-
-        rounded-xl
-
-        bg-linear-to-r
-        from-cyan-500
-        to-purple-500
-
-        text-white
-        font-semibold
-
-        hover:scale-105
-        hover:shadow-lg
-        hover:shadow-purple-500/40
-
-        transition-all
-        duration-300
-      "
+              className="w-full py-3 rounded-xl bg-linear-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:scale-105 hover:shadow-lg hover:shadow-purple-500/40 transition-all duration-300"
             >
               Place Order (COD)
             </button>
@@ -454,39 +303,41 @@ ${
       {/* ================= RIGHT SIDE ================= */}
       <div
         className="
-bg-white/10
-backdrop-blur-xl
-border border-white/10
-rounded-3xl
-shadow-2xl
-p-6
-"
+          bg-white/10
+          backdrop-blur-xl
+          border border-white/10
+          rounded-3xl
+          shadow-2xl
+          p-6
+        "
       >
-        <h2 className="
-  text-2xl
-  font-bold
-  text-white
-  mb-6
-">Order Summary</h2>
+        <h2 className="text-2xl font-bold text-white mb-6">
+          Order Summary
+        </h2>
 
         {cart.length === 0 ? (
           <p className="text-gray-500">Cart is empty</p>
         ) : (
           cart.map((item) => (
-            <div key={item.cart_id} className="flex gap-3 border-b py-3">
+            <div
+              key={item.cart_id}
+              className="flex gap-3 border-b py-3"
+            >
               <img
                 src={item.image}
-                alt={item.name}
+                alt={item.name || "Product"}
                 className="w-16 h-16 object-cover rounded"
               />
 
               <div className="flex-1">
-                <h3 className="font-bold text-white font-xl">{item.name}</h3>
+                <h3 className="font-bold text-white">{item.name}</h3>
 
-                <p className="text-sm text-gray-200">{item.description}</p>
+                <p className="text-sm text-gray-200">
+                  {item.description}
+                </p>
 
                 <p className="text-gray-300">
-                  ${item.price} × {item.quantity}
+                  ${Number(item.price).toFixed(2)} × {item.quantity}
                 </p>
               </div>
             </div>
@@ -494,16 +345,23 @@ p-6
         )}
 
         {/* ================= PRICING ================= */}
-        <h2 className="text-right mt-4 pb-2">Subtotal: ${subtotal}</h2>
+        <h2 className="text-right mt-4 pb-2">
+          Subtotal: ${subtotal.toFixed(2)}
+        </h2>
 
         {discount > 0 && (
           <h2 className="text-right text-green-600">
             Discount: -$
-            {discount < 100 ? (subtotal * discount) / 100 : discount}
+            {(discount < 100
+              ? (subtotal * discount) / 100
+              : discount
+            ).toFixed(2)}
           </h2>
         )}
 
-        <h2 className="text-right font-bold text-lg">Total: ${finalTotal}</h2>
+        <h2 className="text-right font-bold text-lg">
+          Total: ${finalTotal.toFixed(2)}
+        </h2>
 
         {/* ================= COUPON ================= */}
         <div className="mt-4">
@@ -515,50 +373,13 @@ p-6
               placeholder="Enter coupon code"
               value={coupon}
               onChange={(e) => setCoupon(e.target.value)}
-              className="
-w-full
-mb-3
-p-3
-rounded-xl
-
-bg-white/5
-border border-white/20
-
-text-white
-placeholder:text-gray-400
-
-outline-none
-focus:border-cyan-400
-focus:ring-2
-focus:ring-cyan-500/30
-
-transition-all
-"
+              className="w-full mb-3 p-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all"
             />
 
             <button
+              type="button"
               onClick={handleApplyCoupon}
-             className="
-        w-32
-        h-12
-        py-1
-
-        rounded-xl
-
-        bg-linear-to-r
-        from-cyan-500
-        to-purple-500
-
-        text-white
-        font-semibold
-
-        hover:scale-105
-        hover:shadow-lg
-        hover:shadow-purple-500/40
-
-        transition-all
-        duration-300
-      "
+              className="w-32 h-12 py-1 rounded-xl bg-linear-to-r from-cyan-500 to-purple-500 text-white font-semibold hover:scale-105 hover:shadow-lg hover:shadow-purple-500/40 transition-all duration-300"
             >
               Apply
             </button>

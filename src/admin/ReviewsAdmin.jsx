@@ -4,34 +4,45 @@ import API from "../utils/api";
 function ReviewsAdmin() {
   const [reviews, setReviews] = useState([]);
 
+  // Fetch pending reviews when the component mounts.
   useEffect(() => {
-    fetchReviews();
+    const loadReviews = async () => {
+      try {
+        const res = await API.get("/reviews/pending");
+        setReviews(res.data);
+      } catch (err) {
+        console.error("Failed to fetch pending reviews:", err);
+      }
+    };
+
+    loadReviews();
   }, []);
 
-  const fetchReviews = async () => {
+  // Refresh reviews after approving or rejecting one.
+  const refreshReviews = async () => {
     try {
       const res = await API.get("/reviews/pending");
       setReviews(res.data);
     } catch (err) {
-      console.log(err);
+      console.error("Failed to refresh pending reviews:", err);
     }
   };
 
   const approveReview = async (id) => {
     try {
       await API.put(`/reviews/${id}/approve`);
-      fetchReviews();
+      await refreshReviews();
     } catch (err) {
-      console.log(err);
+      console.error("Failed to approve review:", err);
     }
   };
 
   const rejectReview = async (id) => {
     try {
       await API.put(`/reviews/${id}/reject`);
-      fetchReviews();
+      await refreshReviews();
     } catch (err) {
-      console.log(err);
+      console.error("Failed to reject review:", err);
     }
   };
 
@@ -43,11 +54,9 @@ function ReviewsAdmin() {
           text-4xl
           font-bold
           mb-8
-
           bg-linear-to-r
           from-cyan-400
           to-purple-400
-
           bg-clip-text
           text-transparent
         "
@@ -61,13 +70,10 @@ function ReviewsAdmin() {
           className="
             text-center
             py-16
-
             bg-white/5
             backdrop-blur-xl
-
             border
             border-white/10
-
             rounded-3xl
           "
         >
@@ -83,18 +89,13 @@ function ReviewsAdmin() {
               className="
                 bg-white/5
                 backdrop-blur-xl
-
                 border
                 border-white/10
-
                 rounded-3xl
                 p-6
-
                 shadow-xl
-
                 hover:border-cyan-500/30
                 hover:shadow-cyan-500/10
-
                 transition-all
                 duration-300
               "
@@ -125,12 +126,9 @@ function ReviewsAdmin() {
                   className="
                     px-3
                     py-1
-
                     rounded-full
-
                     bg-yellow-500/20
                     text-yellow-300
-
                     text-sm
                     font-medium
                   "
@@ -165,22 +163,18 @@ function ReviewsAdmin() {
                 "
               >
                 <button
+                  type="button"
                   onClick={() => approveReview(r._id)}
                   className="
                     px-5
                     py-3
-
                     rounded-xl
-
                     bg-green-500
-
                     text-white
                     font-medium
-
                     hover:scale-105
                     hover:shadow-lg
                     hover:shadow-green-500/30
-
                     transition-all
                     duration-300
                   "
@@ -189,22 +183,18 @@ function ReviewsAdmin() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => rejectReview(r._id)}
                   className="
                     px-5
                     py-3
-
                     rounded-xl
-
                     bg-red-500
-
                     text-white
                     font-medium
-
                     hover:scale-105
                     hover:shadow-lg
                     hover:shadow-red-500/30
-
                     transition-all
                     duration-300
                   "
@@ -221,12 +211,3 @@ function ReviewsAdmin() {
 }
 
 export default ReviewsAdmin;
-
-export const getPendingReviews = () =>
-  API.get("/reviews/pending").then((res) => res.data);
-
-export const approveReview = (id) =>
-  API.put(`/reviews/${id}/approve`);
-
-export const rejectReview = (id) =>
-  API.put(`/reviews/${id}/reject`);

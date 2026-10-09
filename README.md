@@ -1,16 +1,120 @@
-# React + Vite
+# Shopping Application Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern e-commerce frontend built with React and integrated with a FastAPI backend. The application provides a complete shopping experience with authentication, product browsing, cart management, checkout, orders, reviews, payments, and an admin dashboard.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Authentication
 
-## React Compiler
+- User signup and login
+- JWT-based authentication
+- Email verification
+- Forgot password
+- Reset password
+- Protected routes
+- Admin route protection
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Shopping
 
-## Expanding the ESLint configuration
+- Browse products
+- View product details
+- Product ratings and reviews
+- Add products to cart
+- Update cart quantities
+- Remove products from cart
+- Clear cart
+- Stock availability
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Checkout & Payments
+
+- Checkout flow
+- Stripe payment integration
+- Payment confirmation
+- Order success page
+
+### Orders
+
+- View personal orders
+- View order details
+- Track order status
+
+### User Profile
+
+- View user profile
+- Manage account information
+
+### Admin Dashboard
+
+- Product management
+- User management
+- Order management
+- Coupon management
+- Review management
+- Return management
+
+## Tech Stack
+
+- React 18
+- JavaScript
+- Vite
+- React Router
+- Tailwind CSS
+- Axios
+- Stripe
+- JWT Decode
+- React Icons
+- Lucide React
+
+## Project Structure
+
+```text
+src/
+├── admin/
+│   ├── AdminDashboard.jsx
+│   ├── AdminLayout.jsx
+│   ├── AdminUsers.jsx
+│   ├── CouponsAdmin.jsx
+│   ├── OrdersAdmin.jsx
+│   ├── ProductsAdmin.jsx
+│   ├── ReturnsAdmin.jsx
+│   └── ReviewsAdmin.jsx
+│
+├── components/
+│   ├── Footer.jsx
+│   ├── Hero-section.jsx
+│   ├── Navbar.jsx
+│   ├── PaymentForm.jsx
+│   ├── ProductDetail.jsx
+│   ├── Products.jsx
+│   ├── Progress-Bar.jsx
+│   └── ReviewForm.jsx
+│
+├── context/
+│   └── CartContext.jsx
+│
+├── pages/
+│   ├── Cart.jsx
+│   ├── Checkout.jsx
+│   ├── ForgotPassword.jsx
+│   ├── Login.jsx
+│   ├── Orders.jsx
+│   ├── Profile.jsx
+│   ├── ResetPassword.jsx
+│   ├── Signup.jsx
+│   ├── Success.jsx
+│   └── VerifyEmail.jsx
+│
+├── routes/
+│   ├── AdminRoute.jsx
+│   └── ProtectedRoute.jsx
+│
+├── api/
+│   └── api.js
+│
+├── utils/
+│   └── api.js
+│
+├── App.jsx
+├── App.css
+├── index.css
+└── main.jsx
