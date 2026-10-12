@@ -1,10 +1,21 @@
-
 import { useState, useEffect } from "react";
 
 const images = [
-  "https://plus.unsplash.com/premium_photo-1718913936342-eaafff98834b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dCUyMHNoaXJ0fGVufDB8fDB8fHww",
-  "https://images.unsplash.com/photo-1628911772801-99aa42a1d2c7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8ZWxlY3Ryb25pYyUyMGl0ZW1zfGVufDB8fDB8fHww",
-  "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHNob2VzfGVufDB8fDB8fHww",
+  {
+    url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=1920&h=700&q=85",
+    alt: "Electronics and gadgets",
+    position: "center",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&h=700&q=85",
+    alt: "Fashion shopping collection",
+    position: "center",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&w=1920&h=700&q=85",
+    alt: "Featured sneakers",
+    position: "center",
+  },
 ];
 
 function Hero() {
@@ -13,24 +24,63 @@ function Hero() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
-    }, 2000);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="w-auto h-75 md:h-100 overflow-hidden relative">
-      <img
-        src={images[current]}
-        alt="Featured products"
-        className="w-full h-full object-cover object-top transition-all duration-700"
-      />
+    <section className="relative w-full h-60 sm:h-75 md:h-90 lg:h-105 overflow-hidden bg-slate-900">
+      {images.map((image, index) => (
+        <img
+          key={image.url}
+          src={image.url}
+          alt={image.alt}
+          loading={index === 0 ? "eager" : "lazy"}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            current === index ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ objectPosition: image.position }}
+        />
+      ))}
 
-      {/* Overlay text */}
-      <div className="absolute inset-0 flex items-center justify-center text-white text-3xl font-bold bg-black/30">
-        Big Sale 🔥
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-linear-to-r from-slate-950/50 via-slate-900/20 to-transparent" />
+
+      {/* Banner text */}
+      <div className="absolute inset-0 flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.25em] text-cyan-300 sm:text-base">
+            Discover More
+          </p>
+
+          <h1 className="text-3xl font-extrabold text-white drop-shadow-lg sm:text-4xl md:text-5xl lg:text-6xl">
+            Big Sale <span>🔥</span>
+          </h1>
+
+          <p className="mt-3 text-sm font-medium text-white drop-shadow sm:text-base md:text-lg">
+            Great deals on your favorite products
+          </p>
+        </div>
       </div>
-    </div>
+
+      {/* Slide indicators */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+        {images.map((image, index) => (
+          <button
+            key={image.url}
+            type="button"
+            onClick={() => setCurrent(index)}
+            aria-label={`Show banner ${index + 1}`}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              current === index
+                ? "w-8 bg-cyan-400"
+                : "w-2 bg-white/70 hover:bg-white"
+            }`}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
