@@ -1,4 +1,4 @@
-const API = "http://localhost:8000"; // apna backend URL
+const API = "https://shopping-application-backend-eta.vercel.app"; // apna backend URL
 
 export const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
