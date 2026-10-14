@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: "https://expense-tracker-backend-beige-rho.vercel.app",
 });
 
 API.interceptors.request.use((req) => {
